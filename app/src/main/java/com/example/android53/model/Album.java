@@ -120,4 +120,20 @@ public class Album implements Serializable {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         return earliest.toLocalDate().format(formatter) + " to " + latest.toLocalDate().format(formatter);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Album)) return false;
+        Album other = (Album) obj;
+        // If you want case-insensitive album names:
+        return name != null && other.name != null
+                && name.equalsIgnoreCase(other.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name == null ? 0 : name.toLowerCase().hashCode();
+    }
+
 }
