@@ -50,6 +50,17 @@ public class DataStore implements Serializable {
         }
     }
 
+    public Album getAlbumByName(String name) {
+        if (name == null) return null;
+        for (Album a : albums) {
+            if (a.getName() != null && a.getName().equalsIgnoreCase(name)) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+
     public void removeAlbum(Album album) {
         albums.remove(album);
     }

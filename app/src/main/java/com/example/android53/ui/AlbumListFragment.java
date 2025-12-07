@@ -44,8 +44,15 @@ public class AlbumListFragment extends Fragment {
         List<Album> albums = DataStore.getInstance().getAlbums();
 
         AlbumListAdapter adapter = new AlbumListAdapter(albums, album -> {
-            // TODO: navigate to PhotoGridFragment later
+            if (getActivity() == null) return;
+
+            getParentFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, PhotoGridFragment.newInstance(album.getName()))
+                    .addToBackStack(null)
+                    .commit();
         });
+
 
         recycler.setAdapter(adapter);
 
