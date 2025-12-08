@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Photo implements Serializable {
@@ -59,4 +60,21 @@ public class Photo implements Serializable {
     public void removeTag(Tag tag) {
         tags.remove(tag);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Photo)) return false;
+
+        Photo other = (Photo) o;
+        return Objects.equals(this.uriString, other.uriString);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uriString);
+    }
+
+
+
 }

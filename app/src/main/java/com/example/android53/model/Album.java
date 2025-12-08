@@ -39,10 +39,13 @@ public class Album implements Serializable {
         return Collections.unmodifiableList(photos);
     }
 
-    public void addPhoto(Photo photo) {
-        if (photo != null) {
-            photos.add(photo);
+    public boolean addPhoto(Photo photo) {
+        if (photo == null) return false;
+        if (photos.contains(photo)) {
+            return false; // duplicate
         }
+        photos.add(photo);
+        return true;
     }
 
     public void removePhoto(Photo photo) {
