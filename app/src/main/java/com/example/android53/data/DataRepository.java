@@ -99,11 +99,19 @@ public class DataRepository {
         if (album == null) {
             return null;
         }
+
         Photo photo = new Photo(uri, captionFrom(caption, uri));
-        album.addPhoto(photo);
+
+        boolean added = album.addPhoto(photo);
+        if (!added) {
+            // duplicate: optionally show a Toast from the caller
+            return null;
+        }
+
         saveToDisk();
         return photo;
     }
+
 
     public boolean removePhoto(String albumId, String photoId) {
         Album album = getAlbumById(albumId);

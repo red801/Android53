@@ -61,12 +61,26 @@ public class PhotoGridFragment extends Fragment implements PhotoAdapter.Listener
                     if (uri != null) {
                         requireContext().getContentResolver().takePersistableUriPermission(
                                 uri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        repository.addPhoto(albumId, uri, null);
-                        reload();
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        );
+
+                        Photo added = repository.addPhoto(albumId, uri, null);
+
+                        if (added == null) {
+                            // Duplicate or failed
+                            Toast.makeText(
+                                    requireContext(),
+                                    "This photo is already in this album.",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        } else {
+                            // Successfully added
+                            reload();
+                        }
                     }
                 }
         );
+
     }
 
     @Nullable
