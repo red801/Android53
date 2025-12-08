@@ -1,102 +1,62 @@
 package com.example.android53.model;
 
+import android.net.Uri;
+
 import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 public class Photo implements Serializable {
+    private final String id;
+    private final String uriString;
+    private final String caption;
+    private final long addedAt;
+    private final List<Tag> tags = new ArrayList<>();
 
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * A string representing the image URI.
-     * Example: "content://...", "file:///..."
-     */
-    private final String filePath;
-
-    private String caption;
-    private final LocalDateTime dateTaken;
-    private final List<Tag> tags;
-
-    /**
-     * Tag types that can only have one value.
-     * You may expand this list if needed.
-     */
-    private static final Set<String> SINGLE_VALUED_TAGS =
-            Set.of("location");
-
-    /**
-     * Constructor.
-     * For Android, filePath should usually be a content URI returned
-     * by ACTION_OPEN_DOCUMENT.
-     */
-    public Photo(String filePath) {
-        this.filePath = filePath;
-        this.caption = "";
-        this.tags = new ArrayList<>();
-
-        // Android-safe default date assignment.
-        this.dateTaken = LocalDateTime.now();
+    public Photo(Uri uri, String captionText) {
+        this(UUID.randomUUID().toString(), uri.toString(), captionText, System.currentTimeMillis());
     }
 
-    // --- Getters & Setters ---
+    public Photo(String id, String uriString, String caption, long addedAt) {
+        this.id = id;
+        this.uriString = uriString;
+        this.caption = caption;
+        this.addedAt = addedAt;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public Uri getUri() {
+        return Uri.parse(uriString);
+    }
 
     public String getFilePath() {
-        return filePath;
+        return uriString;
     }
 
     public String getCaption() {
         return caption;
     }
 
-    public void setCaption(String caption) {
-        this.caption = caption;
-    }
-
-    public LocalDateTime getDateTaken() {
-        return dateTaken;
+    public long getAddedAt() {
+        return addedAt;
     }
 
     public List<Tag> getTags() {
         return Collections.unmodifiableList(tags);
     }
 
-    // --- Tag operations ---
-
     public void addTag(Tag tag) {
-        // Enforce single-valued tags
-        if (SINGLE_VALUED_TAGS.contains(tag.getName().toLowerCase())) {
-            tags.removeIf(t -> t.getName().equalsIgnoreCase(tag.getName()));
-        }
-
-        // Avoid duplicates
-        if (!tags.contains(tag)) {
+        if (tag != null && !tags.contains(tag)) {
             tags.add(tag);
         }
     }
 
     public void removeTag(Tag tag) {
         tags.remove(tag);
-    }
-
-    // --- Equality & Hashing ---
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Photo)) return false;
-        Photo other = (Photo) obj;
-        return filePath.equalsIgnoreCase(other.filePath);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(filePath.toLowerCase());
-    }
-
-    @Override
-    public String toString() {
-        // For debugging or simple display
-        return caption.isEmpty() ? filePath : caption;
     }
 }

@@ -1,65 +1,54 @@
 package com.example.android53.model;
 
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.Objects;
 
-/**
- * Represents a tag assigned to a photo.
- * Each tag has a name (like "location") and a value (like "Paris").
- */
 public class Tag implements Serializable {
+    private final TagType type;
+    private final String value;
 
-    private static final long serialVersionUID = 1L;
-
-    private final String name;
-    private String value;
-
-    /**
-     * Creates a Tag with a name and value.
-     * @param name tag type (e.g. "location", "person")
-     * @param value tag value (e.g. "paris", "alice")
-     */
-    public Tag(String name, String value) {
-        this.name = safe(name);
-        this.value = safe(value);
+    public Tag(TagType type, String value) {
+        this.type = type;
+        this.value = value == null ? "" : value.trim();
     }
 
-    // Normalize input: null → "", lowercase, trim
-    private static String safe(String s) {
-        return s == null ? "" : s.trim().toLowerCase();
-    }
-
-    // Getters
-    public String getName() {
-        return this.name;
+    public TagType getType() {
+        return type;
     }
 
     public String getValue() {
-        return this.value;
+        return value;
     }
 
-    // Setter for value only (name is immutable)
-    public void setValue(String value) {
-        this.value = safe(value);
+    public boolean matches(Tag other) {
+        if (other == null || other.type == null || type == null) {
+            return false;
+        }
+        return type == other.type && valueEquals(other.value);
     }
 
-    // Equality is case-insensitive for both name and value
+    private boolean valueEquals(String otherValue) {
+        return value.equalsIgnoreCase(otherValue == null ? "" : otherValue.trim());
+    }
+
+    public boolean valueStartsWith(String prefix) {
+        if (prefix == null) {
+            return false;
+        }
+        return value.toLowerCase(Locale.ROOT).startsWith(prefix.toLowerCase(Locale.ROOT));
+    }
+
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Tag)) return false;
-        Tag other = (Tag) obj;
-        return name.equalsIgnoreCase(other.name) &&
-                value.equalsIgnoreCase(other.value);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Tag tag = (Tag) o;
+        return type == tag.type && valueEquals(tag.value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name.toLowerCase(), value.toLowerCase());
-    }
-
-    @Override
-    public String toString() {
-        return name + " = " + value;
+        return Objects.hash(type, value.toLowerCase(Locale.ROOT));
     }
 }

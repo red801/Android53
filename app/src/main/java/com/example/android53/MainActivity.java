@@ -2,34 +2,56 @@ package com.example.android53;
 
 import android.os.Bundle;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
-import com.example.android53.model.DataStore;
 import com.example.android53.ui.AlbumListFragment;
+import com.example.android53.ui.PhotoGridFragment;
+import com.example.android53.ui.PhotoViewerFragment;
+import com.example.android53.ui.SearchFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements
+        AlbumListFragment.Callbacks,
+        PhotoGridFragment.Callbacks,
+        PhotoViewerFragment.Callbacks,
+        SearchFragment.Callbacks {
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Load persisted data
-        DataStore.getInstance().load(getApplicationContext());
-
         setContentView(R.layout.activity_main);
-
         if (savedInstanceState == null) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, AlbumListFragment.newInstance())
-                    .commit();
+            navigateTo(new AlbumListFragment(), false);
         }
     }
 
+    private void navigateTo(Fragment fragment, boolean addToBackStack) {
+        var transaction = getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment);
+        if (addToBackStack) {
+            transaction.addToBackStack(null);
+        }
+        transaction.commit();
+    }
+
     @Override
-    protected void onStop() {
-        super.onStop();
-        DataStore.getInstance().save(getApplicationContext());
+    public void onAlbumSelected(String albumId) {
+        navigateTo(PhotoGridFragment.newInstance(albumId), true);
+    }
+
+    @Override
+    public void onShowSearch() {
+        navigateTo(new SearchFragment(), true);
+    }
+
+    @Override
+    public void onPhotoSelected(String albumId, String photoId) {
+        navigateTo(PhotoViewerFragment.newInstance(albumId, photoId), true);
+    }
+
+    @Override
+    public void onBackRequested() {
+        getSupportFragmentManager().popBackStack();
     }
 }
