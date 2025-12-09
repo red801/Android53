@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,7 +30,6 @@ public class AlbumListFragment extends Fragment implements AlbumAdapter.Listener
 
     public interface Callbacks {
         void onAlbumSelected(String albumId);
-
         void onShowSearch();
     }
 
@@ -53,6 +53,10 @@ public class AlbumListFragment extends Fragment implements AlbumAdapter.Listener
         adapter = new AlbumAdapter(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
+        ImageButton searchButton = view.findViewById(R.id.openSearchButton);
+        searchButton.setOnClickListener(v -> callbacks.onShowSearch());
+
+
         FloatingActionButton addAlbumButton = view.findViewById(R.id.addAlbumButton);
         addAlbumButton.setOnClickListener(v -> promptForAlbum(null));
     }

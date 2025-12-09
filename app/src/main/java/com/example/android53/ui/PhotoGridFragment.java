@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -21,7 +22,7 @@ import com.example.android53.R;
 import com.example.android53.data.DataRepository;
 import com.example.android53.model.Album;
 import com.example.android53.model.Photo;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,9 @@ import java.util.List;
 public class PhotoGridFragment extends Fragment implements PhotoAdapter.Listener {
 
     private static final String ARG_ALBUM_ID = "album_id";
+    private TextView albumTitleView;
+    private TextView albumMetaView;
+
 
     public interface Callbacks {
         void onPhotoSelected(String albumId, String photoId);
@@ -95,10 +99,16 @@ public class PhotoGridFragment extends Fragment implements PhotoAdapter.Listener
         callbacks = (Callbacks) requireActivity();
         repository = DataRepository.getInstance(requireContext());
         adapter = new PhotoAdapter(this);
+
+        // NEW: header views
+        albumTitleView = view.findViewById(R.id.albumTitle);
+        albumMetaView = view.findViewById(R.id.albumMeta);
+
         RecyclerView recyclerView = view.findViewById(R.id.photoRecyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 3));
         recyclerView.setAdapter(adapter);
-        FloatingActionButton addPhotoButton = view.findViewById(R.id.addPhotoButton);
+
+        ExtendedFloatingActionButton addPhotoButton = view.findViewById(R.id.addPhotoButton);
         addPhotoButton.setOnClickListener(v -> openPicker());
     }
 
@@ -119,7 +129,27 @@ public class PhotoGridFragment extends Fragment implements PhotoAdapter.Listener
             requireActivity().getOnBackPressedDispatcher().onBackPressed();
             return;
         }
+
+        // still set Activity title if you like
         requireActivity().setTitle(album.getName());
+
+        // NEW: update header
+        if (albumTitleView != null) {
+            albumTitleView.setText(album.getName());
+        }
+
+        if (albumMetaView != null) {
+            int count = album.getPhotos().size();
+            String countText = count + (count == 1 ? " photo" : " photos");
+            String range = album.getDateRange(); // uses your existing method
+
+            if (range != null && !range.isEmpty() && !range.equals("No photos")) {
+                albumMetaView.setText(countText + " • " + range);
+            } else {
+                albumMetaView.setText(countText);
+            }
+        }
+
         adapter.submit(new ArrayList<>(album.getPhotos()));
     }
 
