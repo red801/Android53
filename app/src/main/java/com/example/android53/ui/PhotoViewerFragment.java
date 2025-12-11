@@ -43,6 +43,7 @@ public class PhotoViewerFragment extends Fragment {
     private DataRepository repository;
     private Album album;
     private int currentIndex = 0;
+    private TextView albumNameView;
 
     private ImageView imageView;
     private TextView captionView;
@@ -51,23 +52,59 @@ public class PhotoViewerFragment extends Fragment {
     private Button prevButton;
     private Button nextButton;
 
+    private static final String ARG_IS_SEARCH = "is_search";
+    private static final String ARG_SEARCH_ALBUM_IDS = "search_album_ids";
+    private static final String ARG_SEARCH_PHOTO_IDS = "search_photo_ids";
+    private static final String ARG_SEARCH_INDEX = "search_index";
+    private boolean isSearchMode = false;
+    private ArrayList<String> searchAlbumIds;
+    private ArrayList<String> searchPhotoIds;
+
+
+
     public static PhotoViewerFragment newInstance(String albumId, String photoId) {
         PhotoViewerFragment fragment = new PhotoViewerFragment();
         Bundle args = new Bundle();
         args.putString(ARG_ALBUM_ID, albumId);
         args.putString(ARG_PHOTO_ID, photoId);
+        args.putBoolean(ARG_IS_SEARCH, false); // album mode
         fragment.setArguments(args);
         return fragment;
     }
+
+    public static PhotoViewerFragment newInstanceForSearch(
+            ArrayList<String> albumIds,
+            ArrayList<String> photoIds,
+            int startIndex
+    ) {
+        PhotoViewerFragment fragment = new PhotoViewerFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_IS_SEARCH, true);
+        args.putStringArrayList(ARG_SEARCH_ALBUM_IDS, albumIds);
+        args.putStringArrayList(ARG_SEARCH_PHOTO_IDS, photoIds);
+        args.putInt(ARG_SEARCH_INDEX, startIndex);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            albumId = getArguments().getString(ARG_ALBUM_ID);
-            photoId = getArguments().getString(ARG_PHOTO_ID);
+            isSearchMode = getArguments().getBoolean(ARG_IS_SEARCH, false);
+            if (isSearchMode) {
+                searchAlbumIds = getArguments().getStringArrayList(ARG_SEARCH_ALBUM_IDS);
+                searchPhotoIds = getArguments().getStringArrayList(ARG_SEARCH_PHOTO_IDS);
+                currentIndex = getArguments().getInt(ARG_SEARCH_INDEX, 0);
+            } else {
+                albumId = getArguments().getString(ARG_ALBUM_ID);
+                photoId = getArguments().getString(ARG_PHOTO_ID);
+            }
         }
     }
+
 
     @Nullable
     @Override
@@ -77,6 +114,7 @@ public class PhotoViewerFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        albumNameView = view.findViewById(R.id.photoAlbumName);
         super.onViewCreated(view, savedInstanceState);
         repository = DataRepository.getInstance(requireContext());
         imageView = view.findViewById(R.id.photoFullImage);
@@ -97,6 +135,13 @@ public class PhotoViewerFragment extends Fragment {
     }
 
     private void reload() {
+        if (isSearchMode) {
+            // In search mode we just bind whatever the currentIndex points to
+            bindPhoto();
+            return;
+        }
+
+        // Album mode (existing behavior)
         album = repository.getAlbumById(albumId);
         if (album == null) {
             Toast.makeText(requireContext(), "Album missing", Toast.LENGTH_SHORT).show();
@@ -115,6 +160,62 @@ public class PhotoViewerFragment extends Fragment {
     }
 
     private void bindPhoto() {
+        if (isSearchMode) {
+            // Search mode: only walk through the matching results
+            if (searchPhotoIds == null || searchPhotoIds.isEmpty()) {
+                Toast.makeText(requireContext(), "No search results", Toast.LENGTH_SHORT).show();
+                requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                return;
+            }
+
+            if (currentIndex < 0) {
+                currentIndex = 0;
+            } else if (currentIndex >= searchPhotoIds.size()) {
+                currentIndex = searchPhotoIds.size() - 1;
+            }
+
+            albumId = searchAlbumIds.get(currentIndex);
+            photoId = searchPhotoIds.get(currentIndex);
+
+            Album currentAlbum = repository.getAlbumById(albumId);
+            if (currentAlbum == null) {
+                Toast.makeText(requireContext(), "Album missing", Toast.LENGTH_SHORT).show();
+                requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                return;
+            }
+
+            // Find the photo inside this album
+            Photo photo = null;
+            for (Photo p : currentAlbum.getPhotos()) {
+                if (p.getId().equals(photoId)) {
+                    photo = p;
+                    break;
+                }
+            }
+            if (photo == null) {
+                Toast.makeText(requireContext(), "Photo missing", Toast.LENGTH_SHORT).show();
+                requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                return;
+            }
+
+            album = currentAlbum; // so promptAddTag can use it
+
+            requireActivity().setTitle("Search results");
+
+            imageView.setImageURI(null);
+            imageView.setImageURI(photo.getUri());
+            captionView.setText(photo.getCaption());
+            positionView.setText((currentIndex + 1) + " / " + searchPhotoIds.size());
+
+            renderTags(photo);
+            albumNameView.setText(currentAlbum.getName());
+
+            prevButton.setEnabled(currentIndex > 0);
+            nextButton.setEnabled(currentIndex < searchPhotoIds.size() - 1);
+            return;
+        }
+
+        // -------- Album mode (your old logic) --------
         List<Photo> photos = album.getPhotos();
         if (photos.isEmpty()) {
             Toast.makeText(requireContext(), "No photos in album", Toast.LENGTH_SHORT).show();
@@ -128,6 +229,10 @@ public class PhotoViewerFragment extends Fragment {
         }
         Photo photo = photos.get(currentIndex);
         photoId = photo.getId();
+        albumNameView.setText(album.getName());
+
+        requireActivity().setTitle(album.getName());
+
         imageView.setImageURI(null);
         imageView.setImageURI(photo.getUri());
         captionView.setText(photo.getCaption());

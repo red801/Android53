@@ -10,6 +10,8 @@ import com.example.android53.ui.PhotoGridFragment;
 import com.example.android53.ui.PhotoViewerFragment;
 import com.example.android53.ui.SearchFragment;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity implements
         AlbumListFragment.Callbacks,
         PhotoGridFragment.Callbacks,
@@ -34,6 +36,16 @@ public class MainActivity extends AppCompatActivity implements
         }
         transaction.commit();
     }
+    @Override
+    public void onSearchResultSelected(ArrayList<String> albumIds,
+                                       ArrayList<String> photoIds,
+                                       int startIndex) {
+        navigateTo(
+                PhotoViewerFragment.newInstanceForSearch(albumIds, photoIds, startIndex),
+                true
+        );
+    }
+
 
     @Override
     public void onAlbumSelected(String albumId) {

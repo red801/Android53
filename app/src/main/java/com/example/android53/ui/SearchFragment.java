@@ -33,7 +33,9 @@ import java.util.List;
 public class SearchFragment extends Fragment implements SearchResultAdapter.Listener {
 
     public interface Callbacks {
-        void onPhotoSelected(String albumId, String photoId);
+        void onSearchResultSelected(ArrayList<String> albumIds,
+                                    ArrayList<String> photoIds,
+                                    int startIndex);
     }
 
     private Spinner typeSpinner1;
@@ -45,6 +47,8 @@ public class SearchFragment extends Fragment implements SearchResultAdapter.List
     private SearchResultAdapter adapter;
     private DataRepository repository;
     private Callbacks callbacks;
+    private List<SearchResult> lastResults = new ArrayList<>();
+
 
     @Nullable
     @Override
@@ -148,7 +152,10 @@ public class SearchFragment extends Fragment implements SearchResultAdapter.List
             boolean useAnd = operatorGroup.getCheckedRadioButtonId() == R.id.andOption;
             query = new TagQuery(filter1, filter2, useAnd);
         }
+
         List<SearchResult> results = repository.search(query);
+        lastResults = results; // <--- keep them
+
         adapter.submit(new ArrayList<>(results));
         if (results.isEmpty()) {
             statusText.setText("No matches");
@@ -157,8 +164,33 @@ public class SearchFragment extends Fragment implements SearchResultAdapter.List
         }
     }
 
+
     @Override
     public void onResultClick(SearchResult result) {
-        callbacks.onPhotoSelected(result.getAlbum().getId(), result.getPhoto().getId());
+        if (lastResults == null || lastResults.isEmpty()) {
+            return;
+        }
+
+        // Build parallel lists of albumIds and photoIds for navigation
+        ArrayList<String> albumIds = new ArrayList<>();
+        ArrayList<String> photoIds = new ArrayList<>();
+        for (SearchResult r : lastResults) {
+            albumIds.add(r.getAlbum().getId());
+            photoIds.add(r.getPhoto().getId());
+        }
+
+        // Find index of the clicked result
+        int startIndex = 0;
+        for (int i = 0; i < lastResults.size(); i++) {
+            SearchResult r = lastResults.get(i);
+            if (r.getAlbum().getId().equals(result.getAlbum().getId())
+                    && r.getPhoto().getId().equals(result.getPhoto().getId())) {
+                startIndex = i;
+                break;
+            }
+        }
+
+        callbacks.onSearchResultSelected(albumIds, photoIds, startIndex);
     }
+
 }
