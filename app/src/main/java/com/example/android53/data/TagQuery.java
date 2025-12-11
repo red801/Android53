@@ -21,7 +21,7 @@ public class TagQuery {
                 return false;
             }
             for (Tag tag : photo.getTags()) {
-                if (tag.getType() == type && tag.getValue().equalsIgnoreCase(value)) {
+                if (tag.getType() == type && tag.getValue().toLowerCase(Locale.ROOT).startsWith(value.toLowerCase(Locale.ROOT))) {
                     return true;
                 }
             }
