@@ -26,6 +26,30 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
+        <!-- NEW: album name row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Album:"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/photoAlbumName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingStart="4dp"
+                android:textSize="14sp" />
+        </LinearLayout>
+        <!-- END album name row -->
+
         <TextView
             android:id="@+id/photoPosition"
             android:layout_width="match_parent"
@@ -51,8 +75,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Next"
-                android:layout_marginStart="8dp" />
+                android:layout_marginStart="8dp"
+                android:text="Next" />
         </LinearLayout>
 
         <TextView
